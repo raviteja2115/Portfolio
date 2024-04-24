@@ -1,0 +1,289 @@
+{% extends 'base.html' %} {% block title %} Project {% endblock %} {% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <td><p><div class="card mb-3"><div class="card-body"><code>
+knitr::opts_chunk$set(echo = TRUE)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p><div class="card mb-3"><div class="card-body"><code>
+library(tidyverse)
+library(skimr)
+library(stringr)
+library(dplyr)
+library(ggplot2)</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>1. Import your data into R.</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h2>1. Importing data into R</h2>
+<p>data &lt;- read_csv("https://raw.githubusercontent.com/dilernia/STA418-518/main/Data/census_data_2008-2021.csv") 
+head(data)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>2. Explore and display high-level characteristics of your data set, e.g., important variables and their types, different levels for factor variables, any patterns of missing values.</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h2>To explore high-level characteristics of the data using the glimpse() function.</h2>
+<p>glimpse(data)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h2>To explore any patterns of missing values</h2>
+<p>skim(data)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h2>To get the column names of the dataset</h2>
+<p>colnames(data)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>1. At least 5 distinct types of ggplot visualizations together visualizing at least 2 quantitative and 2 categorical variables. For example, side-by-side box plots, two separate scatter plots for different variables, and a bar chart would count as three. You are allowed and encouraged to create visualizations we did not explicitly cover in class.</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Load necessary libraries</h1>
+<p>library(ggplot2)
+library(dplyr)</p>
+<h1>1. Side-by-side box plots for median income by state</h1>
+<p>ggplot(data, aes(x = county_state, y = median_income, fill = county_state)) +
+geom_boxplot() +
+theme(legend.position = "none")</p>
+<h1>2. Scatter plot for median income vs. median monthly rent cost</h1>
+<p>ggplot(data, aes(x = median_income, y = median_monthly_rent_cost)) +
+geom_point()</p>
+<h1>3. Stacked bar chart for proportion of males and females by state</h1>
+<p>data %&gt;%
+group_by(county_state) %&gt;%
+summarize(prop_male = mean(prop_male), prop_female = mean(prop_female)) %&gt;%
+pivot_longer(cols = c(prop_male, prop_female), names_to = "gender", values_to = "proportion") %&gt;%
+ggplot(aes(x = county_state, y = proportion, fill = gender)) +
+geom_bar(stat = "identity", position = "stack")</p>
+<h1>4. Heatmap for median income by state and year</h1>
+<p>ggplot(data, aes(x = county_state, y = year, fill = median_income)) +
+geom_tile()</p>
+<h1>5. Line plot for poverty rate over time</h1>
+<p>ggplot(data, aes(x = year, y = prop_poverty, group = 1)) +
+geom_line() +
+geom_point()</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>Generating 5 distinct types of ggplot visualizations for the top 20 county_states.</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Load necessary libraries</h1>
+<p>library(ggplot2)
+library(dplyr)</p>
+<h1>Filter data to top 20 county states by population</h1>
+<p>top_county_states &lt;- data %&gt;%
+group_by(county_state) %&gt;%
+summarize(total_population = sum(population)) %&gt;%
+arrange(desc(total_population)) %&gt;%
+slice_head(n = 20) %&gt;%
+pull(county_state)</p>
+<p>data_top20 &lt;- data %&gt;%
+filter(county_state %in% top_county_states)</p>
+<h1>1. Side-by-side box plots for median income by state</h1>
+<p>ggplot(data_top20, aes(x = county_state, y = median_income, fill = county_state)) +
+geom_boxplot() +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
+<h1>2. Scatter plot for median income vs. median monthly rent cost</h1>
+<p>ggplot(data_top20, aes(x = median_income, y = median_monthly_rent_cost)) +
+geom_point() +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
+<h1>3. Stacked bar chart for proportion of males and females by state</h1>
+<p>data_top20 %&gt;%
+group_by(county_state) %&gt;%
+summarize(across(c(prop_male, prop_female), mean)) %&gt;%
+pivot_longer(cols = c(prop_male, prop_female), names_to = "gender", values_to = "proportion") %&gt;%
+ggplot(aes(x = county_state, y = proportion, fill = gender)) +
+geom_col() +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
+<h1>4. Heatmap for median income by state and year</h1>
+<p>ggplot(data_top20, aes(x = county_state, y = year, fill = median_income)) +
+geom_tile() +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
+<h1>5. Line plot for poverty rate over time</h1>
+<p>ggplot(data_top20, aes(x = year, y = prop_poverty)) +
+geom_line() +
+geom_point() +
+theme(axis.text.x = element_text(angle = 90, hjust = 1))</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>2. At least two tables of summary statistics obtained using group-wise operations containing at least three statistics for each group, e.g., the sample size, sample mean, and sample standard deviation.</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h2>To obtain summary statistics for each county/state</h2>
+<p>county_state_stats &lt;- data %&gt;%
+group_by(county_state) %&gt;%
+summarize(
+sample_size = n(),
+mean_pop = mean(population),
+sd_pop = sd(population),
+mean_income = mean(median_income),
+sd_income = sd(median_income),
+mean_rent = mean(median_monthly_rent_cost),
+sd_rent = sd(median_monthly_rent_cost)
+)</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h2>To obtain summary statistics for each year</h2>
+<p>year_stats &lt;- data %&gt;%
+group_by(year) %&gt;%
+summarize(
+sample_size = n(),
+mean_pop = mean(population),
+sd_pop = sd(population),
+mean_income = mean(median_income),
+sd_income = sd(median_income),
+mean_home_cost = mean(median_monthly_home_cost),
+sd_home_cost = sd(median_monthly_home_cost)
+)</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>Creating a stacked bar chart that displays the population by year and gender</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Load necessary libraries</h1>
+<p>library(ggplot2)
+library(dplyr)</p>
+<h1>Aggregate population by year and gender</h1>
+<p>pop_data &lt;- data %&gt;%
+group_by(year) %&gt;%
+summarize(prop_male = mean(prop_male * population), 
+        prop_female = mean(prop_female * population)) %&gt;%
+pivot_longer(cols = c(prop_male, prop_female), 
+           names_to = "gender", 
+           values_to = "population")</p>
+<h1>Create stacked bar chart</h1>
+<p>ggplot(pop_data, aes(x = year, y = population, fill = gender)) +
+geom_bar(stat = "identity") +
+labs(title = "Population by Year and Gender", 
+   x = "Year", 
+   y = "Population") +
+theme(plot.title = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 12),
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12)) </p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>3. Merging at least two tables of data together to produce the results tables or visualizations</h2>
+<p><div class="card mb-3"><div class="card-body"><code>
+names(pop_data)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p><div class="card mb-3"><div class="card-body"><code>
+names(year_stats)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Merging year_stats and pop_data by year</h1>
+<p>merged_data &lt;- merge(year_stats, pop_data, by = "year")</p>
+<h1>Creating a scatter plot of population by mean_income, colored by gender</h1>
+<h1>This visualization allows us to see whether there are any patterns or trends in the data, such as differences in the relationship between population and income by gender.</h1>
+<p>ggplot(data = merged_data, aes(x = mean_income, y = population, color = gender)) +
+geom_point() +
+ggtitle("Population and Mean Income by Gender") +
+xlab("Mean Income") +
+ylab("Population")</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>4. At least one data set should be pivoted between long and wide format</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Here each observation is a unique combination of county_state and variable, and the value column contains the corresponding value for that combination.</h1>
+<h1>Pivoting county_state_stats from wide to long format</h1>
+<p>county_state_stats_long &lt;- county_state_stats %&gt;%
+pivot_longer(cols = c(sample_size, mean_pop, sd_pop, mean_income, sd_income, mean_rent, sd_rent),
+           names_to = "variable",
+           values_to = "value")</p>
+<h1>Printing the first few rows of the long-format data</h1>
+<p>head(county_state_stats_long)</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>5. At least one string variable that is manipulated using stringr functions</h2>
+<p>** Here we have used stringr functions such as str_sub to extract sub string of a string. Here we are extracting state name from county_state **</p>
+<p><div class="card mb-3"><div class="card-body"><code>
+library(stringr)</p>
+<h1>creating a new column with state abbreviation</h1>
+<p>data &lt;- data %&gt;%
+mutate(state = str_sub(county_state, -2)) </p>
+<h1>removing the underscores from the county_state column</h1>
+<p>data &lt;- data %&gt;%
+mutate(county_state = str_replace(county_state, "_", " "))</p>
+<h1>extracting only the state name from county_state column</h1>
+<p>data &lt;- data %&gt;%
+mutate(state_name = str_extract(county_state, "([A-Za-z]+)\s*$")) </p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>6. At least one Monte Carlo simulation for conducting statistical inference of your data</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Defining population and median income parameters</h1>
+<p>pop_mean &lt;- 10000
+pop_sd &lt;- 5000
+income_mean &lt;- 50000
+income_sd &lt;- 10000</p>
+<h1>Generating 1000 random samples for population and median income using Monte Carlo simulation</h1>
+<p>n_samples &lt;- 1000
+pop_samples &lt;- rnorm(n_samples, mean = pop_mean, sd = pop_sd)
+income_samples &lt;- rnorm(n_samples, mean = income_mean, sd = income_sd)</p>
+<h1>Calculating 95% confidence intervals for population and median_income</h1>
+<p>pop_ci &lt;- quantile(pop_samples, c(0.025, 0.975))
+income_ci &lt;- quantile(income_samples, c(0.025, 0.975))</p>
+<h1>Printing confidence intervals</h1>
+<p>cat("95% Confidence Interval for Population: [", round(pop_ci[1],2), ",", round(pop_ci[2],2), "]\n")
+cat("95% Confidence Interval for Median Income: [", round(income_ci[1],2), ",", round(income_ci[2],2), "]\n")</p>
+<h1>Ploting histograms of the simulated population and median_income data</h1>
+<p>hist(pop_samples, breaks = 20, main = "Simulated Population Data", xlab = "Population")
+hist(income_samples, breaks = 20, main = "Simulated Median Income Data", xlab = "Median Income")</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>7. At least one bootstrap approach for conducting meaningful statistical inference of your data</h2>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Extracting the population column from the data</h1>
+<p>population_data &lt;- data$population</p>
+<h1>Define the bootstrap function</h1>
+<p>bootstrap_mean &lt;- function(data, nboot, alpha) {
+# Calculate the observed mean of the data
+obs_mean &lt;- mean(data)</p>
+<p># Initialize an empty vector to store the bootstrap means
+boot_means &lt;- rep(0, nboot)</p>
+<p># Generate nboot bootstrap samples and calculate the mean of each sample
+for (i in 1:nboot) {
+boot_sample &lt;- sample(data, replace = TRUE)
+boot_means[i] &lt;- mean(boot_sample)
+}</p>
+<p># Calculate the lower and upper confidence bounds
+lb &lt;- quantile(boot_means, prob = (1 - alpha) / 2)
+ub &lt;- quantile(boot_means, prob = 1 - (1 - alpha) / 2)</p>
+<p># Return a list containing the observed mean, bootstrap means, and confidence bounds
+return(list(obs_mean = obs_mean, boot_means = boot_means, lb = lb, ub = ub))
+}</p>
+<h1>Set the number of bootstrap samples and the confidence level</h1>
+<p>nboot &lt;- 1000
+alpha &lt;- 0.05</p>
+<h1>Call the bootstrap function on the population data</h1>
+<p>boot_results &lt;- bootstrap_mean(population_data, nboot, alpha)</p>
+<h1>Print the observed mean and confidence bounds</h1>
+<p>cat("Observed mean:", boot_results$obs_mean, "\n")
+cat("95% Confidence Interval: (", boot_results$lb, ",", boot_results$ub, ")\n")</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>Creating a histogram with the bootstrap means as the x-axis and the frequency of occurrence as the y-axis.</h2>
+<p>** The observed mean will be marked with a red dashed line, and the confidence interval will be marked with blue dashed lines.**</p>
+<p>** Here we have used the geom_vline() function to draw vertical lines on the plot.**</p>
+<p><div class="card mb-3"><div class="card-body"><code>
+library(ggplot2)</p>
+<h1>Create a data frame of the bootstrap means</h1>
+<p>boot_means_df &lt;- data.frame(boot_means = boot_results$boot_means)</p>
+<h1>Create a histogram of the bootstrap means with confidence interval lines</h1>
+<p>ggplot(boot_means_df, aes(x = boot_means)) +
+geom_histogram(binwidth = 10000, color = "black", fill = "skyblue", alpha = 0.5) +
+geom_vline(xintercept = boot_results$obs_mean, color = "red", linetype = "dashed", size = 1) +
+geom_vline(xintercept = boot_results$lb, color = "blue", linetype = "dashed", size = 1) +
+geom_vline(xintercept = boot_results$ub, color = "blue", linetype = "dashed", size = 1) +
+labs(title = "Bootstrap Means of Population Data",
+   x = "Bootstrap Mean",
+   y = "Frequency") +
+theme_bw()</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p>** The histogram plot explains the visual representation of the bootstrap means and confidence bounds for the population data set, allowing for easy interpretation and communication of the results. **</p></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function copyCode(button) {
+            var code = button.parentNode.querySelector('code').innerText;
+            navigator.clipboard.writeText(code);
+        }
+    </script>
+</body>
+</html>
+{% endblock %}

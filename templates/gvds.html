@@ -1,0 +1,285 @@
+{% extends 'base.html' %} {% block title %} Project {% endblock %} {% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <td><hr />
+<p>output: 
+rmdformats::material:
+code_folding: hide</p>
+<hr />
+<p><div class="card mb-3"><div class="card-body"><code>
+knitr::opts_chunk$set(echo = TRUE)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h1>Data-Set Selected:</h1>
+<h2>Gun Violence Data</h2>
+<h3>Description</h3>
+<p>Information on instances of gun violence documented in the United States from January 2013 through March 2018. Note that gun violence incidents in 2013 are not all included, with only 279 incidents from 2013 in this data set, notably missing the Las Vegas Mass Shooting. The data is contained in gunViolenceFull.csv.</p>
+<h3>Source:</h3>
+<p>Data was obtained from the GitHub repo https://github.com/jamesqo/gun-violence-data, which originally obtained the data from the Gun Violence Archive’s website. From the organization’s description:
+Gun Violence Archive (GVA) is a not for profit corporation formed in 2013 to provide free online public access to accurate information about gun-related violence in the United States. GVA will collect and check for accuracy, comprehensive information about gun-related violence in the U.S. and then post and disseminate it online.</p>
+<h1>Project Requirements</h1>
+<h3>Loading Required Libraries</h3>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Some of these libraries might not be installed in your system, please install them using console first before proceeding with this step.</h1>
+<p>library(tidyverse)
+library(stringr)
+library(skimr)
+library(knitr)
+library(ggthemes)
+library(VIM)
+library(naniar)
+library(lubridate)
+library(flextable)
+library(gt)
+library(gtExtras)
+library(kableExtra)
+library(viridis)
+library(ggmap)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h3>Loading the Given Data</h3>
+<p><div class="card mb-3"><div class="card-body"><code>
+Gun_Data &lt;- read.csv('gunviolenceFull.csv')
+head(Gun_Data)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>Data Dictionary and Exploratory Data Analysis</h2>
+<h3>Data Dictionary and missingness patterns</h3>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Define variable names, descriptions, units, and types</h1>
+<p>var_names &lt;- c("incident_id", "date", "state", "city_or_county", "address", "n_killed", "n_injured", "incident_url", "source_url", "incident_url_fields_missing", "congressional_district", "gun_stolen", "gun_type", "incident_characteristics", "lat", "location_description", "long", "n_guns_involved", "notes", "participant_age", "participant_age_group", "participant_gender", "participant_name", "participant_relationship", "participant_status", "participant_type", "sources", "state_house_district", "state_senate_district", "address_full")
+var_desc &lt;- c("Unique identifier for each incident", "Date of the incident", "State where the incident occurred", "City or county where the incident occurred", "Address of the incident", "Number of people killed in the incident", "Number of people injured in the incident", "URL for the incident details page on the Gun Violence Archive website", "URL for the source article about the incident", "Indicator of missing fields in the incident URL", "Congressional district where the incident occurred", "Indicator of whether the gun was stolen", "Type of gun used in the incident", "Description of the incident characteristics", "Latitude of the incident location", "Description of the incident location", "Longitude of the incident location", "Number of guns involved in the incident", "Additional notes about the incident", "Age of each participant in the incident", "Age group of each participant in the incident", "Gender of each participant in the incident", "Name of each participant in the incident", "Relationship of each participant to the incident", "Status of each participant in the incident", "Type of each participant in the incident", "Sources of information about the incident", "State House district where the incident occurred", "State Senate district where the incident occurred", "Full address of the incident location")
+var_units &lt;- c("", "", "", "", "", "", "", "", "", "", "", "", "", "", "degrees", "", "degrees", "", "", "", "", "", "", "", "", "", "", "", "", "")
+var_type &lt;- c("integer", "date", "character", "character", "character", "integer", "integer", "character", "character", "logical", "integer", "character", "character", "character", "numeric", "character", "numeric", "integer", "character", "character", "character", "character", "character", "character", "character", "character","character", "integer", "integer", "character")</p>
+<h1>Create data frame for Data Dictionary</h1>
+<p>data_dict &lt;- data.frame(var_names, var_desc, var_units, var_type)</p>
+<h1>Print Data Dictionary</h1>
+<p>knitr::kable(data_dict, col.names = c("Variable Name", "Description", "Units", "Type"), caption = "Data Dictionary for Sample Data")</p>
+<h1>Using the glimpse to get the structure of data.</h1>
+<p>Gun_Data %&gt;% glimpse()</p>
+<h1>Using Skim to get the high-level characteristics of the dataset.</h1>
+<p>Gun_Data %&gt;% skimr::skim()</p>
+<h1>Generate the missingness pattern plot</h1>
+<p>gg_miss_var(Gun_Data)</p>
+<p></code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h3>Merging Datasets</h3>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>First, we'll create a dataset state_counts that counts the number of incidents in each state</h1>
+<p>state_counts &lt;- aggregate(incident_id ~ state, data = Gun_Data, FUN = length)</p>
+<h1>Next, we'll create a dataset state_killed that sums the number of people killed in each state</h1>
+<p>state_killed &lt;- aggregate(n_killed ~ state, data = Gun_Data, FUN = sum)</p>
+<h1>Finally, we can merge the two datasets based on the state variable</h1>
+<p>state_merged &lt;- merge(state_counts, state_killed, by = "state")</p>
+<p>ggplot(state_merged, aes(x = state)) +
+geom_bar(aes(y = incident_id), stat = "identity", fill = "blue", alpha = 0.7) +
+geom_bar(aes(y = n_killed), stat = "identity", fill = "red", alpha = 0.7) +
+labs(x = "State", y = "Count", title = "Gun Violence Incidents and Deaths by State")
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h3>Date / Time Manipulation</h3>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>extract the month from the date variable</h1>
+<p>Gun_Data$month &lt;- month(ymd(Gun_Data$date))</p>
+<h1>view the new variable</h1>
+<p>head(Gun_Data$month,100)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h3>String Manipulattion</h3>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>extract only the street name from the address variable</h1>
+<p>Gun_Data$street &lt;- str_extract(Gun_Data$address, "^[^,]*")</p>
+<h1>output the modified dataframe</h1>
+<p>head(Gun_Data$street)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h3>Tables of Summary Statistics</h3>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Table 1</h1>
+<p>incident_summary &lt;- Gun_Data %&gt;%
+group_by(state) %&gt;%
+summarise(n_incidents = n()) %&gt;%
+arrange(desc(n_incidents))</p>
+<p>flextable(incident_summary) %&gt;%
+set_caption("Table 1: Number of gun violence incidents by state") %&gt;%
+theme_vanilla()
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Table 2</h1>
+<p>death_injury_summary &lt;- Gun_Data %&gt;%
+separate(date, into = c("month", "day", "year"), sep = "/") %&gt;%
+group_by(year) %&gt;%
+summarise(n_killed = sum(n_killed), n_injured = sum(n_injured))</p>
+<p>kable(death_injury_summary, format = "markdown", align = "c") %&gt;%
+kable_styling() %&gt;%
+add_header_above(c(" " = 1, "Total Number of Deaths and Injuries by Year" = 2)) %&gt;%
+row_spec(0, bold = TRUE)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h2>Data Visualizations</h2>
+<p>Plot 1: Scatter plot of latitude and longitude of incidents</p>
+<pre><code>    The plot shows the latitude and longitude of each gun violence incident.
+The x-axis represents the longitude and the y-axis represents the latitude.
+The title of the plot is "Geographic Distribution of Gun Violence Incidents" and the caption includes the source of the data.
+The points are colored in blue for emphasis.
+The plot shows that gun violence incidents are distributed across the United States, with some clustering in urban areas.
+</code></pre>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Create a scatter plot of the latitude and longitude of incidents</h1>
+<p>ggplot(Gun_Data, aes(x = long, y = lat, color = state)) +
+geom_point(alpha = 0.6) +
+labs(title = "Latitude and Longitude of Incidents",
+   x = "Longitude",
+   y = "Latitude",
+   color = "State") +
+theme(plot.title = element_text(hjust = 0.5))
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div>
+Plot2:</p>
+<p>Bar plot that shows the number of gun-related deaths per state. The data is stored in a data frame called Gun_Data. The x-axis represents the states and the y-axis represents the number of gun-related deaths.</p>
+<p><div class="card mb-3"><div class="card-body"><code>
+ggplot(data = Gun_Data, aes(x = state, y = n_killed)) +
+geom_bar(stat = "identity", fill = "black", color = "darkred") + 
+labs(title = "Gun-related Deaths per State") + 
+theme(axis.text.y = element_text(hjust = 1, size = 8)) + 
+coord_flip()
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p>Plot 3: </p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Create a summary table of number of incidents per state</h1>
+<p>state_summary &lt;- Gun_Data %&gt;% 
+group_by(state) %&gt;% 
+summarize(num_incidents = n())</p>
+<h1>Create a total count of incidents</h1>
+<p>total_incidents &lt;- sum(state_summary$num_incidents)</p>
+<h1>Add a column for percentage of incidents</h1>
+<p>state_summary$percent_incidents &lt;- state_summary$num_incidents / total_incidents * 100</p>
+<h1>Sort by percent_incidents descending</h1>
+<p>state_summary &lt;- state_summary[order(-state_summary$percent_incidents),]</p>
+<h1>Create donut chart</h1>
+<p>ggplot(state_summary, aes(x = "", y = percent_incidents, fill = state)) + 
+geom_bar(stat = "identity", width = 1, color = "white") +
+coord_polar(theta = "y", start = 0, direction = -1) +
+scale_fill_hue(name = "State") +
+theme_void() +
+theme(legend.position = "bottom") +
+labs(title = "Gun Violence Incidents by State",
+   subtitle = paste("Total Incidents:", total_incidents),
+   fill = "State", 
+   caption = "Data source: Gunviolence.csv")
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p>Plot 4:</p>
+<p><div class="card mb-3"><div class="card-body"><code>
+age_data &lt;- Gun_Data %&gt;%
+filter(!is.na(participant_age_group)) %&gt;%
+mutate(participant_age_group = factor(participant_age_group, levels = c("Child 0-11", "Teen 12-17", "Adult 18+")),
+     date = as.Date(date)) %&gt;%
+group_by(participant_age_group, year = format(date, "%Y")) %&gt;%
+summarise(count = n()) %&gt;%
+arrange(year, participant_age_group)</p>
+<p>ggplot(age_data, aes(x = year, y = count, fill = participant_age_group)) +
+geom_bar(stat = "identity") +
+labs(title = "Participant Age Groups in Gun Violence Incidents", x = "Year", y = "Number of Participants", fill = "Age Group") +
+scale_fill_manual(values = c("#1f77b4", "#ff7f0e", "#2ca02c")) +
+theme_bw()
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<p>Plot 5:</p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>create a ridgeline chart with the number of shooting victims on the x-axis and the state on the y-axis.</h1>
+<p>library(ggridges)</p>
+<h1>Create a subset of the data with only the variables we need</h1>
+<p>shootings_sub &lt;- Gun_Data %&gt;% 
+select(state, n_killed, n_injured)</p>
+<h1>Create a ridgeline chart</h1>
+<p>ggplot(shootings_sub, aes(x = n_killed + n_injured, y = state, fill = ..x..)) +
+geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+scale_fill_gradient(low = "gray90", high = "red") +
+labs(title = "Number of Shooting Victims by State", 
+   x = "Number of Victims", y = "State") +
+theme_minimal() + 
+xlim(0, 3)
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h3>Monte Carlo Methods of Inference</h3>
+<p>One non-trivial question we can explore using Monte Carlo simulation is whether there is a significant difference in the average number of people killed in mass shootings in the top 10 states with the most incidents compared to the bottom 10 states. We can formulate the null and alternative hypotheses as follows:</p>
+<p>Null hypothesis: There is no significant difference in the average number of people killed in mass shootings between the top 10 states and the bottom 10 states.
+Alternative hypothesis: The top 10 states have a significantly higher average number of people killed in mass shootings than the bottom 10 states.</p>
+<p>To test this hypothesis, we can use a permutation test. Specifically, we can randomly permute the state labels and calculate the difference in means between the top 10 and bottom 10 states. We can repeat this process many times to obtain the null distribution of the test statistic. We can then compare the observed difference in means to the null distribution and calculate the p-value as the proportion of simulated differences that are greater than or equal to the observed difference.</p>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Subset the data to include only mass shootings</h1>
+<p>mass_shootings &lt;- Gun_Data %&gt;%
+filter(n_killed &gt;= 4)</p>
+<h1>Create a vector indicating whether each state is in the top 10 or bottom 10</h1>
+<p>top_bottom_vec &lt;- Gun_Data %&gt;%
+group_by(state) %&gt;%
+summarize(total_incidents = n()) %&gt;%
+arrange(desc(total_incidents)) %&gt;%
+mutate(top_bottom = ifelse(rank(total_incidents) &lt;= 10, "Top 10", ifelse(rank(total_incidents) &gt;= 43, "Bottom 10", "Other"))) %&gt;%
+filter(top_bottom %in% c("Top 10", "Bottom 10")) %&gt;%
+pull(top_bottom)</p>
+<h1>Define the test statistic function</h1>
+<p>diff_means &lt;- function(x, y) {
+mean(mass_shootings$n_killed[x]) - mean(mass_shootings$n_killed[y])
+}</p>
+<h1>Compute the observed difference in means</h1>
+<p>obs_diff &lt;- diff_means(top_bottom_vec == "Top 10", top_bottom_vec == "Bottom 10")</p>
+<h1>Permutation test</h1>
+<p>set.seed(123)
+n_permutations &lt;- 10000
+permuted_diffs &lt;- replicate(n_permutations, {
+permuted_vec &lt;- sample(top_bottom_vec)
+diff_means(permuted_vec == "Top 10", permuted_vec == "Bottom 10")
+})</p>
+<h1>Compute p-value</h1>
+<p>p_value &lt;- mean(abs(permuted_diffs) &gt;= abs(obs_diff))</p>
+<h1>Display null distribution</h1>
+<p>null_dist &lt;- tibble(diff = permuted_diffs) %&gt;%
+ggplot(aes(x = diff)) +
+geom_histogram(binwidth = 0.5, color = "black", fill = "gray") +
+geom_vline(xintercept = obs_diff, color = "red", size = 1.5) +
+labs(title = "Null Distribution of Difference in Means",
+   x = "Difference in Means",
+   y = "Frequency") +
+theme_classic()</p>
+<h1>Display results</h1>
+<p>cat("Observed difference in means: ", obs_diff, "\n")
+cat("P-value: ", p_value, "\n")
+null_dist
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p>
+<h3>Bootstrap Methods</h3>
+<p><div class="card mb-3"><div class="card-body"><code></p>
+<h1>Subset data to only include incidents in California</h1>
+<p>ca_data &lt;- Gun_Data %&gt;% filter(state == "California")</p>
+<h1>Define function to calculate median number of people injured in bootstrap samples</h1>
+<p>med_boot &lt;- function(data, i) {
+med &lt;- median(sample(data$n_injured, replace = TRUE))
+return(med)
+}</p>
+<h1>Generate bootstrap distribution</h1>
+<p>set.seed(123) # for reproducibility
+boot_dist &lt;- replicate(1000, med_boot(ca_data, i = 1:nrow(ca_data)))</p>
+<h1>Calculate 95% confidence interval</h1>
+<p>ci_lower &lt;- quantile(boot_dist, 0.025)
+ci_upper &lt;- quantile(boot_dist, 0.975)</p>
+<h1>Plot bootstrap distribution</h1>
+<p>ggplot(data.frame(median = boot_dist), aes(x = median)) +
+geom_histogram(binwidth = 0.5, color = "black", fill = "lightblue") +
+geom_vline(xintercept = median(ca_data$n_injured), color = "red", linetype = "dashed", size = 1.2) +
+geom_vline(xintercept = ci_lower, color = "green", linetype = "dashed", size = 1.2) +
+geom_vline(xintercept = ci_upper, color = "green", linetype = "dashed", size = 1.2) +
+labs(title = "Bootstrap Distribution of Median Number of People Injured in Gun Violence Incidents in California",
+   x = "Median Number of People Injured",
+   y = "Frequency") +
+theme_minimal()
+</code><button class="btn btn-sm btn-secondary float-right copy-btn" onclick="copyCode(this)">Copy</button></div></div></p></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function copyCode(button) {
+            var code = button.parentNode.querySelector('code').innerText;
+            navigator.clipboard.writeText(code);
+        }
+    </script>
+</body>
+</html>
+{% endblock %}
